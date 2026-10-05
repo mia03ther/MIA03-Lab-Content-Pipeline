@@ -1,1 +1,1 @@
-# MIA03-Lab-Content-Pipeline
+# MIA03 Lab — Building an AI-native research workflow for Open Source Intelligence.
