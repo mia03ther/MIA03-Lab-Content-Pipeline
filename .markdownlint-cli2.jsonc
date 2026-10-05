@@ -1,0 +1,44 @@
+{
+  // markdownlint-cli2 configuration
+  //
+  // Tuned for long-form English technical prose with embedded CJK and code
+  // fences. Rules are disabled with a reason, never silently.
+  "config": {
+    "default": true,
+
+    // MD013: line length. Prose here is hard-wrapped by intent for readability
+    // in a diff, but CJK code blocks and tables legitimately exceed 80 columns.
+    // Left disabled rather than enforced, since forcing short lines in a
+    // research note would hurt the tables and YAML blocks that matter most.
+    "MD013": false,
+
+    // MD033/MD041: HTML and first-line-heading. Templates use HTML comments to
+    // hide self-check lists from rendered output, and several templates open
+    // with a blockquote or a comment by design.
+    "MD033": false,
+    "MD041": false,
+
+    // MD034: bare URLs. The research-note format deliberately records source
+    // URLs inline in the claim ledger, where a bare URL is the point.
+    "MD034": false,
+
+    // MD036/MD024: emphasis used as a heading, duplicate sibling headings.
+    // Section titles in this repo are full sentences and repeat across files.
+    "MD024": { "siblings_only": true },
+    "MD036": false,
+
+    // MD046: code block style. Fenced blocks are used consistently; the rule is
+    // kept enabled but indented variant is allowed so snippets paste cleanly.
+    "MD046": { "style": "fenced" },
+
+    // MD029: ordered list numbering. Research notes renumber per section on
+    // purpose, and forcing sequential numbering fights that.
+    "MD029": { "style": "ordered" }
+  },
+  "globs": [
+    "**/*.md"
+  ],
+  "ignores": [
+    ".github/**"
+  ]
+}

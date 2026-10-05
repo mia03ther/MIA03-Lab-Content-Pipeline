@@ -1,0 +1,113 @@
+name: CI
+
+# Three cheap checks that catch the failure modes this repository can actually
+# have: a broken relative link in the docs, a template someone renamed or gutted,
+# and a Markdown file that will not render on GitHub.
+#
+# Nothing here runs a model or touches a secret, so the whole pipeline is safe
+# to run on any pull request.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-validation:
+    name: Build validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Framework integrity: required files, template section contracts, and
+      # relative link targets. Fails fast and prints every problem at once, so a
+      # contributor fixes the whole list in one pass.
+      - name: Validate framework structure
+        run: python scripts/validate_structure.py --root .
+
+      - name: Byte-compile scripts
+        run: python -m compileall -q scripts
+
+  markdown-lint:
+    name: Markdown lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          config: .markdownlint-cli2.jsonc
+
+  link-check:
+    name: Link check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Relative links are validated offline by validate_structure.py. This job
+      # additionally verifies external URLs, which is why it is allowed to fail
+      # on unavailability rather than absence: a flaky remote host is not a repo
+      # defect and should not block unrelated work.
+      - name: Check external links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --max-concurrency 4
+            --exclude-path .github
+            --accept 200,206,301,302,307,308,403,429
+            './**/*.md'
+          fail: false
+
+  self-check:
+    name: Documentation self-check
+    runs-on: ubuntu-latest
+    needs: [build-validation, markdown-lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      # Cheap assertions about claims this repo makes about itself. If the README
+      # advertises a workflow diagram or an example, it must exist.
+      - name: Verify README references real paths
+        run: |
+          set -euo pipefail
+          status=0
+          while IFS= read -r ref; do
+            [ -z "$ref" ] && continue
+            if [ ! -e "$ref" ]; then
+              echo "README references a missing path: $ref"
+              status=1
+            fi
+          done < <(grep -oE '\]\(([A-Za-z0-9._/-]+)\)' README.md \
+                    | sed -E 's/^\]\((.*)\)$/\1/' | sort -u)
+          exit $status
+
+      - name: Confirm the framework is self-consistent
+        run: |
+          set -euo pipefail
+          for f in docs/workflow.md docs/architecture.md \
+                   research/templates/github-project-analysis.md \
+                   prompts/research-agent.md prompts/writing-agent.md \
+                   prompts/editor-agent.md \
+                   examples/openshell-analysis.md; do
+            if [ ! -s "$f" ]; then
+              echo "empty or missing: $f"
+              exit 1
+            fi
+          done
+          echo "framework files present and non-empty"

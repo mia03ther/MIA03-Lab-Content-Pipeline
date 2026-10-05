@@ -1,0 +1,17 @@
+# Keep line endings stable across contributor platforms. Without this, a Windows
+# checkout rewrites LF to CRLF and every Markdown file shows as modified.
+* text=auto eol=lf
+
+*.md    text eol=lf
+*.py    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+*.jsonc text eol=lf
+*.svg   text eol=lf
+
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.pdf   binary

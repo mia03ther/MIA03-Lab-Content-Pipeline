@@ -1,0 +1,26 @@
+# Byte-compiled Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local tooling
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Research output: active notes are working state, not a deliverable.
+# Published analysis belongs in examples/ and is committed deliberately.
+research/active/
+assets/tmp/
